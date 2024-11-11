@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Rede Boa Vontade de Rádio</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #121212;
+      color: #ffffff;
+    }
+    h1 {
+      color: #ffffff;
+    }
+    select, button {
+      padding: 10px;
+      font-size: 16px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+    button {
+      width: 100px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Super Rede Boa Vontade de Rádio</h1>
+
+  <!-- Menu de seleção de rádio -->
+  <label for="radioSelect">Selecione uma estação:</label>
+  <select id="radioSelect" onchange="changeStation()">
+    <option value="https://8802.brasilstream.com.br/stream">SRBV de Brasília AM 1210</option>
+    <option value="https://9000.brasilstream.com.br/stream">SRBV de São Paulo FM 84.3/AM 1260</option>
+    <option value="https://8431.brasilstream.com.br/stream">SRBV do Rio de Janeiro AM 940</option>
+  </select>
+
+  <!-- Player de áudio -->
+  <audio id="radioPlayer" controls>
+    <source src="https://8802.brasilstream.com.br/stream" type="audio/mpeg">
+    Seu navegador não suporta o elemento de áudio.
+  </audio>
+  
+  <button onclick="togglePlay()">Play</button>
+
+  <script>
+    const radioPlayer = document.getElementById("radioPlayer");
+    const radioSelect = document.getElementById("radioSelect");
+
+    // Função para trocar a estação
+    function changeStation() {
+      const selectedStation = radioSelect.value;
+      radioPlayer.src = selectedStation;
+      radioPlayer.play();
+      document.querySelector("button[onclick='togglePlay()']").innerText = "Pause";
+    }
+
+    // Função para pausar e tocar com atualização do texto
+    function togglePlay() {
+      const playPauseButton = document.querySelector("button[onclick='togglePlay()']");
+      if (radioPlayer.paused) {
+        radioPlayer.play();
+        playPauseButton.innerText = "Pause";
+      } else {
+        radioPlayer.pause();
+        playPauseButton.innerText = "Play";
+      }
+    }
+
+    // Define o texto inicial do botão Play/Pause
+    document.querySelector("button[onclick='togglePlay()']").innerText = "Play";
+
+    // Tentar reconectar após erro de conexão
+    radioPlayer.addEventListener("error", function() {
+      setTimeout(() => {
+        console.log("Tentando reconectar...");
+        radioPlayer.load(); // Recarrega o stream
+        radioPlayer.play(); // Tenta reiniciar o áudio
+      }, 5000); // Tenta reconectar após 5 segundos
+    });
+  </script>
+</body>
+</html>
