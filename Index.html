@@ -13,36 +13,89 @@
       justify-content: center;
       height: 100vh;
       margin: 0;
-      background-color: #121212; /* Fundo escuro */
-      color: #ffffff; /* Texto claro */
+      background-color: #121212;
+      color: #ffffff;
     }
     h1 {
       color: #ffffff;
     }
-    select, button {
+    select, button, input {
       padding: 10px;
       font-size: 16px;
       margin-top: 20px;
       cursor: pointer;
     }
     button {
-      width: 100px;
-      margin-bottom: 30px; /* Adiciona espaço abaixo do botão de play/pause */
+      width: 150px;
+      margin-bottom: 20px;
     }
     footer {
       margin-top: auto;
       padding: 10px;
-      background-color: #1a1a1a; /* Fundo do rodapé */
+      background-color: #1a1a1a;
       color: #ffffff;
       width: 100%;
       text-align: center;
+    }
+    .recording-options {
+      border: 2px solid #ffffff;
+      padding: 40px;
+      margin-top: 30px;
+      width: 420px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .recording-options h3 {
+      margin-bottom: 15px;
+      color: #ffffff;
+    }
+    .recording-options label {
+      margin-top: 10px;
+      margin-bottom: 5px;
+      color: #ffffff;
+    }
+    .recording-options input {
+      margin-bottom: 10px;
+      width: 80%;
+    }
+    .recording-button {
+      background-color: #ff0000;
+      color: #fff;
+    }
+    .normal-button {
+      background-color: #4CAF50;
+      color: #fff;
+    }
+    .message {
+      color: #ffff00;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+    .time-inputs {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    .time-inputs input {
+      width: 48%;
+    }
+    /* Novo estilo para o botão Agendar Gravação em vermelho */
+    .schedule-button-red {
+      background-color: #ff0000;
+      color: #fff;
+    }
+    .schedule-button-normal {
+      background-color: #4CAF50;
+      color: #fff;
     }
   </style>
 </head>
 <body>
   <h1>Super Rede Boa Vontade de Rádio</h1>
 
-  <!-- Menu de seleção de rádio -->
   <label for="radioSelect">Selecione uma estação:</label>
   <select id="radioSelect" onchange="changeStation()">
     <option value="https://8802.brasilstream.com.br/stream">SRBV de Brasília AM 1210</option>
@@ -50,28 +103,52 @@
     <option value="https://8431.brasilstream.com.br/stream">SRBV do Rio de Janeiro AM 940</option>
   </select>
 
-  <!-- Player de áudio -->
-  <audio id="radioPlayer" controls>
-    <source src="LINK_STREAM_BRASILIA" type="audio/mpeg">
+  <audio id="radioPlayer" controls crossorigin="anonymous">
     Seu navegador não suporta o elemento de áudio.
   </audio>
   
   <button onclick="togglePlay()">Play / Pause</button>
 
+  <div class="recording-options">
+    <h3>Programar Gravação</h3>
+    <label for="startTime">Hora de Início e Término:</label>
+    <div class="time-inputs">
+      <input type="datetime-local" id="startTime">
+      <input type="datetime-local" id="endTime">
+    </div>
+    
+    <button onclick="scheduleRecording()" id="scheduleButton" class="schedule-button-normal">Agendar Gravação</button>
+    <button id="recordButton" class="normal-button" onclick="toggleRecording()">Gravar</button>
+
+    <!-- Mensagens de estado de gravação -->
+    <div id="scheduleMessage"></div>
+    <div id="startMessage"></div>
+  </div>
+
+  <div id="message" class="message"></div>
+
   <script>
     const radioPlayer = document.getElementById("radioPlayer");
     const radioSelect = document.getElementById("radioSelect");
-    let reconnectInterval;
+    const recordButton = document.getElementById("recordButton");
+    const scheduleButton = document.getElementById("scheduleButton");
+    const scheduleMessage = document.getElementById("scheduleMessage");
+    const startMessage = document.getElementById("startMessage");
+    const message = document.getElementById("message");
 
-    // Função para trocar a estação
+    let mediaRecorder;
+    let audioChunks = [];
+    let startTimeout;
+    let stopTimeout;
+    let isRecording = false;
+    let isScheduled = false;
+
     function changeStation() {
       const selectedStation = radioSelect.value;
       radioPlayer.src = selectedStation;
       radioPlayer.play();
-      setupReconnect();
     }
 
-    // Função para pausar e tocar
     function togglePlay() {
       if (radioPlayer.paused) {
         radioPlayer.play();
@@ -80,34 +157,97 @@
       }
     }
 
-    // Função para tentar reconectar
-    function setupReconnect() {
-      clearInterval(reconnectInterval); // Limpa qualquer intervalo de reconexão ativo
-      reconnectInterval = setInterval(() => {
-        if (radioPlayer.paused) {
-          radioPlayer.play().catch(() => {
-            console.log("Tentando reconectar...");
-          });
-        }
-      }, 5000); // Tenta reconectar a cada 5 segundos
+    async function startRecording() {
+      const stream = radioPlayer.captureStream();
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+
+      mediaRecorder.ondataavailable = event => {
+        audioChunks.push(event.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const link = document.createElement('a');
+        link.href = audioUrl;
+        link.download = 'gravação_radio.webm';
+        link.click();
+      };
+
+      mediaRecorder.start();
+      recordButton.classList.add('recording-button');
+      recordButton.disabled = true;
+      isRecording = true;
     }
 
-    // Monitoramento de erros
-    radioPlayer.addEventListener("error", () => {
-      console.log("Erro de conexão detectado, tentando reconectar...");
-      setupReconnect();
-    });
+    function stopRecording() {
+      mediaRecorder.stop();
+      clearTimeout(startTimeout);
+      clearTimeout(stopTimeout);
+      recordButton.classList.remove('recording-button');
+      recordButton.disabled = false;
+      isRecording = false;
+      message.textContent = "";
+    }
 
-    // Limpa o intervalo ao reconectar com sucesso
-    radioPlayer.addEventListener("playing", () => {
-      clearInterval(reconnectInterval);
-    });
+    function toggleRecording() {
+      if (isRecording) {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    }
+
+    function scheduleRecording() {
+      const startTime = document.getElementById("startTime").value;
+      const endTime = document.getElementById("endTime").value;
+
+      if (!startTime || !endTime) {
+        alert("Por favor, selecione a hora de início e término.");
+        return;
+      }
+
+      const startDate = new Date(startTime);
+      const endDate = new Date(endTime);
+      const currentTime = new Date();
+
+      if (startDate <= currentTime) {
+        alert("A hora de início deve ser no futuro.");
+        return;
+      }
+
+      if (endDate <= startDate) {
+        alert("A hora de término deve ser posterior à hora de início.");
+        return;
+      }
+
+      const delayStart = startDate - currentTime;
+      const delayEnd = endDate - currentTime;
+
+      startTimeout = setTimeout(() => {
+        startRecording();
+        scheduleMessage.textContent = ""; // Limpa a mensagem de agendamento
+        startMessage.textContent = "Gravação iniciada!";
+        scheduleButton.classList.remove("schedule-button-red");
+        scheduleButton.classList.add("schedule-button-normal");
+      }, delayStart);
+
+      stopTimeout = setTimeout(() => {
+        stopRecording();
+        startMessage.textContent = ""; // Limpa a mensagem de gravação iniciada
+        message.textContent = "Gravação finalizada!";
+      }, delayEnd);
+
+      isScheduled = true;
+      scheduleMessage.textContent = "Gravação programada!";
+      scheduleButton.classList.add("schedule-button-red");
+      scheduleButton.classList.remove("schedule-button-normal");
+    }
   </script>
 
-  <!-- Rodapé com a mensagem -->
   <footer>
     Desenvolvido por: Reginaldo de Souza
   </footer>
 </body>
 </html>
-
