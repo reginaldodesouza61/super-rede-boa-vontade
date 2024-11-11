@@ -13,8 +13,8 @@
       justify-content: center;
       height: 100vh;
       margin: 0;
-      background-color: #121212;
-      color: #ffffff;
+      background-color: #121212; /* Fundo escuro */
+      color: #ffffff; /* Texto claro */
     }
     h1 {
       color: #ffffff;
@@ -27,6 +27,16 @@
     }
     button {
       width: 100px;
+      margin-bottom: 30px; /* Adiciona espaço abaixo do botão de play/pause */
+    }
+
+    footer {
+      margin-top: auto;
+      padding: 10px;
+      background-color: #1a1a1a; /* Fundo do rodapé */
+      color: #ffffff;
+      width: 100%;
+      text-align: center;
     }
   </style>
 </head>
@@ -43,11 +53,11 @@
 
   <!-- Player de áudio -->
   <audio id="radioPlayer" controls>
-    <source src="https://8802.brasilstream.com.br/stream" type="audio/mpeg">
+    <source src="LINK_STREAM_BRASILIA" type="audio/mpeg">
     Seu navegador não suporta o elemento de áudio.
   </audio>
   
-  <button onclick="togglePlay()">Play</button>
+  <button onclick="togglePlay()">Play / Pause</button>
 
   <script>
     const radioPlayer = document.getElementById("radioPlayer");
@@ -58,36 +68,21 @@
       const selectedStation = radioSelect.value;
       radioPlayer.src = selectedStation;
       radioPlayer.play();
-      document.querySelector("button[onclick='togglePlay()']").innerText = "Pause";
     }
 
-    // Função para pausar e tocar com atualização do texto
+    // Função para pausar e tocar
     function togglePlay() {
-      const playPauseButton = document.querySelector("button[onclick='togglePlay()']");
       if (radioPlayer.paused) {
         radioPlayer.play();
-        playPauseButton.innerText = "Pause";
       } else {
         radioPlayer.pause();
-        playPauseButton.innerText = "Play";
       }
     }
-
-    // Define o texto inicial do botão Play/Pause
-    document.querySelector("button[onclick='togglePlay()']").innerText = "Play";
-
-    // Tentar reconectar após erro de conexão
-    radioPlayer.addEventListener("error", function() {
-      setTimeout(() => {
-        console.log("Tentando reconectar...");
-        radioPlayer.load(); // Recarrega o stream
-        radioPlayer.play(); // Tenta reiniciar o áudio
-      }, 5000); // Tenta reconectar após 5 segundos
-    });
   </script>
-<footer>
-  Desenvolvido por: Reginaldo de Souza
-</footer>
 
+  <!-- Rodapé com a mensagem -->
+  <footer>
+    Desenvolvido por: Reginaldo de Souza
+  </footer>
 </body>
 </html>
