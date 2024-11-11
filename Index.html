@@ -29,7 +29,6 @@
       width: 100px;
       margin-bottom: 30px; /* Adiciona espaço abaixo do botão de play/pause */
     }
-
     footer {
       margin-top: auto;
       padding: 10px;
@@ -62,12 +61,14 @@
   <script>
     const radioPlayer = document.getElementById("radioPlayer");
     const radioSelect = document.getElementById("radioSelect");
+    let reconnectInterval;
 
     // Função para trocar a estação
     function changeStation() {
       const selectedStation = radioSelect.value;
       radioPlayer.src = selectedStation;
       radioPlayer.play();
+      setupReconnect();
     }
 
     // Função para pausar e tocar
@@ -78,6 +79,29 @@
         radioPlayer.pause();
       }
     }
+
+    // Função para tentar reconectar
+    function setupReconnect() {
+      clearInterval(reconnectInterval); // Limpa qualquer intervalo de reconexão ativo
+      reconnectInterval = setInterval(() => {
+        if (radioPlayer.paused) {
+          radioPlayer.play().catch(() => {
+            console.log("Tentando reconectar...");
+          });
+        }
+      }, 5000); // Tenta reconectar a cada 5 segundos
+    }
+
+    // Monitoramento de erros
+    radioPlayer.addEventListener("error", () => {
+      console.log("Erro de conexão detectado, tentando reconectar...");
+      setupReconnect();
+    });
+
+    // Limpa o intervalo ao reconectar com sucesso
+    radioPlayer.addEventListener("playing", () => {
+      clearInterval(reconnectInterval);
+    });
   </script>
 
   <!-- Rodapé com a mensagem -->
@@ -86,3 +110,4 @@
   </footer>
 </body>
 </html>
+
