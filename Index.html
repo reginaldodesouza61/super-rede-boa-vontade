@@ -65,7 +65,7 @@
       color: #fff;
     }
     .message {
-      color: #ffff00;
+      color: #51ff00;
       font-size: 14px;
       margin-top: 15px;
     }
@@ -115,7 +115,6 @@
   </footer>
 
   <script>
-    // Script permanece o mesmo
     const radioPlayer = document.getElementById("radioPlayer");
     const radioSelect = document.getElementById("radioSelect");
     const recordButton = document.getElementById("recordButton");
@@ -129,6 +128,12 @@
     let stopTimeout;
     let isRecording = false;
     let isScheduled = false;
+
+    function initializeRadio() {
+      const selectedStation = radioSelect.value;
+      radioPlayer.src = selectedStation;
+      radioPlayer.play();
+    }
 
     function changeStation() {
       const selectedStation = radioSelect.value;
@@ -227,6 +232,8 @@
 
       scheduleMessage.textContent = "Gravação programada!";
     }
+
+    window.onload = initializeRadio;
   </script>
 </body>
 </html>
