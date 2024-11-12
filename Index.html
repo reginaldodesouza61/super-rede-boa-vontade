@@ -145,8 +145,13 @@
       }
     }
 
-    // Inicia a gravação
+    // Inicia a gravação e reproduz a estação
     async function startRecording() {
+      // Verifica se o rádio não está tocando e o inicia
+      if (radioPlayer.paused) {
+        radioPlayer.play();
+      }
+
       const stream = radioPlayer.captureStream();
       mediaRecorder = new MediaRecorder(stream);
       audioChunks = [];
@@ -171,9 +176,10 @@
       isRecording = true;
     }
 
-    // Para a gravação
+    // Para a gravação e pausa a estação
     function stopRecording() {
       mediaRecorder.stop();
+      radioPlayer.pause();  // Pausa a reprodução ao finalizar a gravação
       clearTimeout(startTimeout);
       clearTimeout(stopTimeout);
       recordButton.classList.add('normal-button');
