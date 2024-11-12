@@ -65,7 +65,7 @@
       color: #fff;
     }
     .message {
-      color: #51ff00;
+      color: #ffff00;
       font-size: 14px;
       margin-top: 15px;
     }
@@ -129,18 +129,14 @@
     let isRecording = false;
     let isScheduled = false;
 
-    function initializeRadio() {
-      const selectedStation = radioSelect.value;
-      radioPlayer.src = selectedStation;
-      radioPlayer.play();
-    }
-
+    // Carrega a primeira estação automaticamente
     function changeStation() {
       const selectedStation = radioSelect.value;
       radioPlayer.src = selectedStation;
       radioPlayer.play();
     }
 
+    // Toca ou pausa o player
     function togglePlay() {
       if (radioPlayer.paused) {
         radioPlayer.play();
@@ -149,6 +145,7 @@
       }
     }
 
+    // Inicia a gravação
     async function startRecording() {
       const stream = radioPlayer.captureStream();
       mediaRecorder = new MediaRecorder(stream);
@@ -174,6 +171,7 @@
       isRecording = true;
     }
 
+    // Para a gravação
     function stopRecording() {
       mediaRecorder.stop();
       clearTimeout(startTimeout);
@@ -184,6 +182,7 @@
       isRecording = false;
     }
 
+    // Alterna entre iniciar e parar a gravação
     function toggleRecording() {
       if (isRecording) {
         stopRecording();
@@ -192,6 +191,7 @@
       }
     }
 
+    // Programa uma gravação para começar e terminar em horários específicos
     function scheduleRecording() {
       const startTime = document.getElementById("startTime").value;
       const endTime = document.getElementById("endTime").value;
@@ -233,7 +233,32 @@
       scheduleMessage.textContent = "Gravação programada!";
     }
 
-    window.onload = initializeRadio;
+    // Tentativa de reconexão automática
+    radioPlayer.addEventListener("error", handleReconnect);
+
+    function handleReconnect() {
+      console.log("Tentando reconectar...");
+      const reconnectInterval = setInterval(() => {
+        if (navigator.onLine) { // Checa se está online
+          radioPlayer.load();   // Recarrega a estação
+          radioPlayer.play()    // Inicia a reprodução
+            .then(() => {
+              console.log("Reconectado com sucesso!");
+              clearInterval(reconnectInterval); // Para de tentar reconectar
+            })
+            .catch(error => {
+              console.log("Tentando novamente em breve...");
+            });
+        } else {
+          console.log("Sem conexão com a internet.");
+        }
+      }, 5000); // Tenta reconectar a cada 5 segundos
+    }
+
+    // Carrega a primeira estação automaticamente ao iniciar
+    window.onload = () => {
+      changeStation();
+    };
   </script>
 </body>
 </html>
